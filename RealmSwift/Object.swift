@@ -109,17 +109,15 @@ public class Object : RLMObjectBase, Equatable {
     Indexes are created automatically for string primary key properties.
     :returns: Name of the property designated as the primary key, or `nil` if the model has no primary key.
     */
-    public override class func primaryKey() -> String? { return nil }
+    public class func primaryKey() -> String? { return nil }
 
     /**
-    // FIXME: Rename to `ignoredProperties`
-
     Override to return an array of property names to ignore. These properties will not be persisted
     and are treated as transient.
 
     :returns: `Array` of property names to ignore.
     */
-    public class func swiftIgnoredProperties() -> [String] { return [] }
+    public class func ignoredProperties() -> [String] { return [] }
 
     /**
     Return an array of property names for properties which should be indexed. Only supported
@@ -143,9 +141,9 @@ public class Object : RLMObjectBase, Equatable {
     }
 
 
-    // MARK: Private Initializers
+    // MARK: Private functions
 
-    // FIXME: None of these initializers should be exposed in the public interface.
+    // FIXME: None of these functions should be exposed in the public interface.
 
     /**
     WARNING: This is an internal initializer not intended for public use.
@@ -167,6 +165,39 @@ public class Object : RLMObjectBase, Equatable {
     public override init(objectSchema: RLMObjectSchema) {
         super.init(objectSchema: objectSchema)
     }
+
+    // Get RLMArray values when getting array properties
+    public override func valueForKey(key: String) -> AnyObject? {
+        if let list = listProperty(key) {
+            return list
+        }
+        return super.valueForKey(key)
+    }
+
+    // Support setting RLMArray values
+    public override func setValue(value: AnyObject?, forKey: String) {
+        if let list = listProperty(forKey) {
+            if let value = value as? RLMArray {
+                list._rlmArray = value
+                return
+            }
+            if let value = value as? RLMListBase {
+                list._rlmArray = value._rlmArray
+                return
+            }
+        }
+        super.setValue(value, forKey: forKey)
+    }
+
+    // Helper for getting a list property for the given key
+    private func listProperty(forKey: String) -> RLMListBase? {
+        if let prop = RLMObjectBaseObjectSchema(self)?[forKey] {
+            if prop.type == .Array {
+                return object_getIvar(self, prop.swiftListIvar) as RLMListBase?
+            }
+        }
+        return nil
+    }
 }
 
 // MARK: Equatable
@@ -178,6 +209,25 @@ public func == <T: Object>(lhs: T, rhs: T) -> Bool {
 
 /// Internal class. Do not use directly.
 public class ObjectUtil : NSObject {
+    @objc private class func primaryKeyForClass(type: AnyClass) -> NSString? {
+        if let type = type as? Object.Type {
+            return type.primaryKey()
+        }
+        return nil
+    }
+    @objc private class func ignoredPropertiesForClass(type: AnyClass) -> NSArray? {
+        if let type = type as? Object.Type {
+            return type.ignoredProperties() as NSArray?
+        }
+        return nil
+    }
+    @objc private class func indexedPropertiesForClass(type: AnyClass) -> NSArray? {
+        if let type = type as? Object.Type {
+            return type.indexedProperties() as NSArray?
+        }
+        return nil
+    }
+
     // Get the names of all properties in the object which are of type List<>
     @objc private class func getGenericListPropertyNames(obj: AnyObject) -> NSArray {
         let reflection = reflect(obj)
@@ -195,5 +245,4 @@ public class ObjectUtil : NSObject {
 
         return properties
     }
-
 }
