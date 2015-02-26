@@ -139,14 +139,16 @@ class ObjectSchemaInitializationTests: TestCase {
         assertThrows(RLMObjectSchema(forObjectClass: SwiftObjectWithDatePrimaryKey.self), "Should throw when setting a non int/string primary key")
     }
 
-
-
     func testPrimaryKey() {
         XCTAssertNil(SwiftObject().objectSchema.primaryKeyProperty, "Object should default to having no primary key property")
         XCTAssertEqual(SwiftPrimaryStringObject().objectSchema.primaryKeyProperty!.name, "stringCol")
     }
 
     func testIgnoredProperties() {
+        let schema = SwiftIgnoredPropertiesObject().objectSchema
+        XCTAssertNil(schema["runtimeProperty"], "The object schema shouldn't contain ignored properties")
+        XCTAssertNil(schema["runtimeDefaultProperty"], "The object schema shouldn't contain ignored properties")
+        XCTAssertNil(schema["readOnlyProperty"], "The object schema shouldn't contain read-only properties")
     }
 
     func testIndexedProperties() {
