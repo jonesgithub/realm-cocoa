@@ -93,42 +93,6 @@ class ObjectSchemaInitializationTests: TestCase {
         XCTAssertEqual(objectCol!.objectClassName!, "SwiftBoolObject")
     }
 
-    private class SwiftFakeObject : NSObject {
-        dynamic class func primaryKey() -> String! { return nil }
-        dynamic class func ignoredProperties() -> [String] { return [] }
-        dynamic class func indexedProperties() -> [String] { return [] }
-    }
-
-    private class SwiftObjectWithNSURL : SwiftFakeObject {
-        dynamic var URL: NSURL = NSURL(string: "http://realm.io")!
-    }
-
-    private enum SwiftEnum {
-        case Case1
-        case Case2
-    }
-
-    private class SwiftObjectWithEnum : SwiftFakeObject {
-        var swiftEnum = SwiftEnum.Case1
-    }
-
-    private class SwiftObjectWithStruct : SwiftFakeObject {
-        var swiftStruct = SortDescriptor(property: "prop")
-        var URL: NSURL = NSURL(string: "http://realm.io")!
-    }
-
-    private class SwiftObjectWithDatePrimaryKey : SwiftFakeObject {
-        dynamic var date = NSDate()
-
-        dynamic override class func primaryKey() -> String! {
-            return "date"
-        }
-    }
-
-    private class SwiftFakeObjectSubclass : SwiftFakeObject {
-        dynamic var dateCol = NSDate()
-    }
-
     func testInvalidObjects() {
         let schema = RLMObjectSchema(forObjectClass: SwiftFakeObjectSubclass.self) // Should be able to get a schema for a non-RLMObjectBase subclass
         XCTAssertEqual(schema.properties.count, 1)
@@ -152,5 +116,61 @@ class ObjectSchemaInitializationTests: TestCase {
     }
 
     func testIndexedProperties() {
+        XCTAssertTrue(SwiftIndexedPropertiesObject().objectSchema["stringCol"]!.indexed)
+
+        let unindexibleSchema = RLMObjectSchema(forObjectClass: SwiftObjectWithUnindexibleProperties.self)
+        for propName in SwiftObjectWithUnindexibleProperties.indexedProperties() {
+            XCTAssertFalse(unindexibleSchema[propName]!.indexed, "Shouldn't mark unindexible property '\(propName)' as indexed")
+        }
+    }
+}
+
+class SwiftFakeObject : NSObject {
+    dynamic class func primaryKey() -> String! { return nil }
+    dynamic class func ignoredProperties() -> [String] { return [] }
+    dynamic class func indexedProperties() -> [String] { return [] }
+}
+
+class SwiftObjectWithNSURL : SwiftFakeObject {
+    dynamic var URL: NSURL = NSURL(string: "http://realm.io")!
+}
+
+enum SwiftEnum {
+    case Case1
+    case Case2
+}
+
+class SwiftObjectWithEnum : SwiftFakeObject {
+    var swiftEnum = SwiftEnum.Case1
+}
+
+class SwiftObjectWithStruct : SwiftFakeObject {
+    var swiftStruct = SortDescriptor(property: "prop")
+}
+
+class SwiftObjectWithDatePrimaryKey : SwiftFakeObject {
+    dynamic var date = NSDate()
+
+    dynamic override class func primaryKey() -> String! {
+        return "date"
+    }
+}
+
+class SwiftFakeObjectSubclass : SwiftFakeObject {
+    dynamic var dateCol = NSDate()
+}
+
+class SwiftObjectWithUnindexibleProperties : SwiftFakeObject {
+    dynamic var boolCol = false
+    dynamic var intCol = 123
+    dynamic var floatCol = 1.23 as Float
+    dynamic var doubleCol = 12.3
+    dynamic var binaryCol = "a".dataUsingEncoding(NSUTF8StringEncoding)!
+    dynamic var dateCol = NSDate(timeIntervalSince1970: 1)
+    dynamic var objectCol = SwiftBoolObject()
+    let arrayCol = List<SwiftBoolObject>()
+
+    dynamic override class func indexedProperties() -> [String] {
+        return ["boolCol", "intCol", "floatCol", "doubleCol", "binaryCol", "dateCol", "objectCol", "arrayCol"]
     }
 }
