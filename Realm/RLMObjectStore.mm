@@ -417,11 +417,12 @@ void RLMAddObjectToRealm(RLMObjectBase *object, RLMRealm *realm, RLMCreationOpti
 
 
 RLMObjectBase *RLMCreateObjectInRealmWithValue(RLMRealm *realm, NSString *className, id value, RLMCreationOptions options) {
-    if (RLMIsSubclass([value class], RLMObjectBase.class) &&
-        [[[(RLMObjectBase *)value class] className] isEqualToString:className] &&
-        ((RLMObjectBase *)value)->_realm == realm) {
-        // This is a no-op if value is an RLMObject of the same type already backed by the target realm.
-        return value;
+    if (options & RLMCreationOptionsUpdateOrCreate && RLMIsSubclass([value class], RLMObjectBase.class)) {
+        RLMObjectBase *obj = value;
+        if ([obj->_objectSchema.className isEqualToString:className] && obj->_realm == realm) {
+            // This is a no-op if value is an RLMObject of the same type already backed by the target realm.
+            return value;
+        }
     }
 
     // verify writable
