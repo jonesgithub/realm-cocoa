@@ -33,21 +33,28 @@ extern "C" {
 //  class_* - any table name beginning with class is used to store objects
 //            of the typename (the rest of the name after class)
 //  metadata - table used for realm metadata storage
-extern NSString * const c_objectTableNamePrefix;
+extern const char * const c_objectTableNamePrefix;
+extern const size_t c_objectTableNamePrefixLen;
 extern const char * const c_metadataTableName;
 extern const char * const c_primaryKeyTableName;
 extern const char * const c_versionColumnName;
 extern const size_t c_versionColumnIndex;
 
-static inline NSString *RLMClassForTableName(NSString *tableName) {
-    if ([tableName hasPrefix:c_objectTableNamePrefix]) {
-        return [tableName substringFromIndex:6];
+static inline NSString *RLMClassForTableName(const char *tableName) {
+    if (strncmp(tableName, c_objectTableNamePrefix, c_objectTableNamePrefixLen) == 0) {
+        return @(tableName + c_objectTableNamePrefixLen);
     }
     return nil;
 }
 
-static inline NSString *RLMTableNameForClass(NSString *className) {
-    return [c_objectTableNamePrefix stringByAppendingString:className];
+static inline void RLMTableNameForClass(__unsafe_unretained NSString *const className, char out[]) {
+    memcpy(out, c_objectTableNamePrefix, c_objectTableNamePrefixLen);
+    NSUInteger used;
+    [className getBytes:out + c_objectTableNamePrefixLen
+              maxLength:63 - c_objectTableNamePrefixLen usedLength:&used
+               encoding:NSUTF8StringEncoding options:0
+                  range:NSMakeRange(0, className.length) remainingRange:nil];
+    out[c_objectTableNamePrefixLen + used] = 0;
 }
 
 

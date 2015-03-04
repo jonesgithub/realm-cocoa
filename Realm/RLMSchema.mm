@@ -28,7 +28,8 @@
 #import <objc/runtime.h>
 #import <tightdb/group.hpp>
 
-NSString * const c_objectTableNamePrefix = @"class_";
+const char * const c_objectTableNamePrefix = "class_";
+const size_t c_objectTableNamePrefixLen = strlen(c_objectTableNamePrefix);
 const char * const c_metadataTableName = "metadata";
 const char * const c_versionColumnName = "version";
 const size_t c_versionColumnIndex = 0;
@@ -149,7 +150,7 @@ static NSMutableDictionary *s_localNameToClass;
     // cache descriptors for all subclasses of RLMObject
     RLMSchema *schema = [[RLMSchema alloc] init];
     for (unsigned long i = 0; i < numTables; i++) {
-        NSString *className = RLMClassForTableName(@(realm.group->get_table_name(i).data()));
+        NSString *className = RLMClassForTableName(realm.group->get_table_name(i).data());
         if (className) {
             RLMObjectSchema *object = [RLMObjectSchema schemaFromTableForClassName:className realm:realm];
             object.table = realm.group->get_table(i).get();

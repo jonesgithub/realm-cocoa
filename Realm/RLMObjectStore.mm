@@ -169,8 +169,7 @@ static bool RLMRealmGetTables(RLMRealm *realm, RLMSchema *targetSchema) {
     }
 
     for (RLMObjectSchema *objectSchema in targetSchema.objectSchema) {
-        NSString *tableName = RLMTableNameForClass(objectSchema.className);
-        TableRef table = realm.group->get_table(tableName.UTF8String);
+        TableRef table = RLMTableForObjectClass(realm, objectSchema.className);
         if (!table) {
             return false;
         }

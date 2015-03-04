@@ -213,7 +213,7 @@
         if (prop.type == RLMPropertyTypeObject || prop.type == RLMPropertyTypeArray) {
             // set link type for objects and arrays
             tightdb::TableRef linkTable = table->get_link_target(col);
-            prop.objectClassName = RLMClassForTableName(@(linkTable->get_name().data()));
+            prop.objectClassName = RLMClassForTableName(linkTable->get_name().data());
         }
 
         [propArray addObject:prop];
@@ -320,12 +320,14 @@
 tightdb::TableRef RLMTableForObjectClass(RLMRealm *realm,
                                          NSString *className,
                                          bool &created) {
-    NSString *tableName = RLMTableNameForClass(className);
-    return realm.group->get_or_add_table(tableName.UTF8String, &created);
+    char tableName[tightdb::Group::max_table_name_length];
+    RLMTableNameForClass(className, tableName);
+    return realm.group->get_or_add_table(tableName, &created);
 }
 
 tightdb::TableRef RLMTableForObjectClass(RLMRealm *realm,
                                          NSString *className) {
-    NSString *tableName = RLMTableNameForClass(className);
-    return realm.group->get_table(tableName.UTF8String);
+    char tableName[tightdb::Group::max_table_name_length];
+    RLMTableNameForClass(className, tableName);
+    return realm.group->get_table(tableName);
 }
