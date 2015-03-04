@@ -25,6 +25,8 @@ x.x.x Release notes (yyyy-MM-dd)
 * Fix crash when calling `createOrUpdate:inRealm` with nested linked objects.
 * Use the key from `+[RLMRealm setEncryptionKey:forRealmsAtPath:]` in
   `-writeCopyToPath:error:` and `+migrateRealmAtPath:`.
+* Comparing an RLMObject to a non-RLMObject using `-[RLMObject isEqual:]` or
+  `-isEqualToObject:` now returns NO instead of crashing.
 
 0.90.6 Release notes (2015-02-20)
 =============================================================
